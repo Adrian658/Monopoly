@@ -1,0 +1,268 @@
+package Monopoly;
+
+import java.util.Scanner;
+import java.lang.String;
+import javafx.scene.paint.Color;
+import javafx.scene.control.TextArea;
+
+/**
+ * Represents a property in monopoly
+ */
+public class Property extends BoardSpot {
+  
+  /** The name of the property */
+  private String name;
+  
+  /** The price to buy the property */
+  private int price;
+  
+  /** The mortgage price of the property */
+  private int mortgage;
+  
+  /** The type of property */
+  private String type;
+  
+  /** Whether the property is owned by a player */
+  private boolean ownership = false;
+  
+  /** The owner of the property if it has one */
+  private Player owner;
+  
+  /** The array of rents corresponding to how many hotels the property has on it */
+  private int[] rents;
+  
+  /** The number of tents the property has on it */
+  private int numTents = 0;
+  
+  /** The price to buy a tent for the property */
+  private int tentPrice;
+  
+  /** If the property currently has a ranger station on it */
+  private boolean rangerStationOwned = false;
+  
+  /**
+   * Constructor that sets the name, price, type, rent, tent price, and mortgage price for the property
+   * @param name the name of the property
+   * @param price the price to buy the property
+   * @param type the type of property
+   * @param rents the array of rents of the property corresponding to how many tents the property has on it
+   * @param tentPrice the price to buy a tent or ranger station for the property
+   */
+  public Property(String name, int price, String type, int[] rents, int tentPrice) {
+    this.name = name;
+    this.price = price;
+    this.type = type;
+    this.rents = rents;
+    this.tentPrice = tentPrice;
+    this.mortgage = price / 2;
+  }
+  
+  /**
+   * Constructor for Natural Features and Activity properties that is the same as above but does not set rents because rent for these properties is handled in Monopoly
+   * @param name the name of the property
+   * @param price the price to buy the property
+   * @param type the type of property
+   */
+  public Property(String name, int price, String type) {
+    this.name = name;
+    this.price = price;
+    this.type = type;
+    this.mortgage = price / 2;
+  }
+  
+  /**
+   * Returns the name of the property
+   * @return name the name of the property
+   */
+  public String getName() {
+    return name;
+  }
+  
+  /**
+   * Returns the price to buy the property
+   * @return price the price to buy the property
+   */
+  public int getPrice() {
+    return price;
+  }
+  
+  /**
+   * Returns the mortgage price of the property
+   * @return mortgage the mortgage price of the property
+   */
+  public int getMortgage() {
+    return mortgage;
+  }
+  
+  /**
+   * Returns the type of the property
+   * @return type the type of the property
+   */
+  public String getType() {
+    return type;
+  }
+  
+  /**
+   * Returns if the property is currently owned by a player
+   * @return ownership if the property is owned
+   */
+  public boolean getOwnership() {
+    return ownership;
+  }
+  
+  /**
+   * Sets whether the property is owned by a player
+   * @param ownership if the property is owned
+   */
+  public void setOwnership(boolean ownership) {
+    this.ownership = ownership;
+  }
+  
+  /**
+   * Returns the owner of the property if it has one
+   * @return owner the owner of this property if there is one
+   */
+  public Player getOwner() {
+    return owner;
+  }
+  
+  /**
+   * Sets the owner of this property
+   * @param owner the owner of this property
+   */
+  public void setOwner(Player owner) {
+    this.owner = owner;
+  }
+  
+  /**
+   * Returns the list of rents of the property corresponding to how many tents are on this property
+   * @return rents the list of rents of the property
+   */
+  public int[] getRents() {
+    return rents;
+  }
+  
+  /**
+   * Returns the current rent of the property depending on how many tents or ranger stations are on the property
+   * @return getrents()[x] the rent corresponding to how many tents are on the property
+   */
+  public int getRent() {
+    if (getRangerStationOwned() == true)
+      return getRents()[5];
+    else
+      return getRents()[getNumTents()];
+  }
+  
+  /**
+   * Returns the number of tents the property has on it
+   * @return numTents number of tents property has on it
+   */
+  public int getNumTents() {
+    return numTents;
+  }
+  
+  /**
+   * Adds the specified number of tents to the property
+   * @param numTents number of tents to add to the property
+   * @param dialogueBox the text area that informs the user of what is happening in the game
+   * @return tentsAdded if any tents were added to the property
+   */
+  public boolean addTents(int numTents, TextArea dialogueBox ) {
+    boolean tentsAdded = false; //if any tents have been added to the property
+    /* if the number of tents currently on the property plus the number of tents to add exceeds the max amount of tents a property can contain */
+    if (this.numTents + numTents > 5)
+      dialogueBox.appendText("\nA property can have at most 4 tents or a ranger station (which is equivalent to 5 tents)");
+    /* if the property already has a ranger station on it */
+    else if (rangerStationOwned)
+      dialogueBox.appendText("\nThis property already has a ranger station on it");
+    /* if tents can be added to the property */
+    else {
+      /* loops over to add a tent the number of times specified by numTents in parameters */
+      for (int i = 0; i < numTents; i++) {
+        if (this.numTents < 4) { //if there are less than 4 tents on the property, add a tent */
+          this.numTents++;
+        }
+        else if (this.numTents == 4) { //if there are 4 tents on the property, add a ranger station */
+          this.numTents = 0;
+          rangerStationOwned = true;
+        }
+        owner.subtractBalance(tentPrice); //owner pays for the tent
+      }
+      tentsAdded = true;
+    }
+    return tentsAdded;
+  }
+  
+  /**
+   * Sells the specified number of tents on the property
+   * @param numTents number of tents to sell
+   * @param dialogueBox the text area that informs the user of what is happening in the game
+   * @return tentsAdded if any tents were sold from the property
+   */
+  public boolean sellTents(int numTents, TextArea dialogueBox) {
+    boolean tentsSold = false;
+    /* if the number of tents to be sold is more than the five */
+    if (numTents > 5)
+      dialogueBox.appendText("\nYou can buy at maximum 5 tents for one property");
+    /* if the number of tents currently on the property minus the number of tents to sell is less than 0 and the property does not have a ranger station on it */
+    else if (this.numTents - numTents < 0 && !rangerStationOwned )
+      dialogueBox.appendText("\n" + getName() + " only has " + getNumTents() + " tents on it");
+    else {
+      for (int i = 0; i < numTents; i++) { //loops the number of times specified by numTents in parameters
+        if (this.numTents < 5 && this.numTents > 0 && !rangerStationOwned) { //if the property has between 0 and 4 tents and not a ranger station, sell a tent
+          this.numTents--;
+        }
+        else if (rangerStationOwned) { //if the property has a ranger station, sell the ranger station
+          this.numTents = 4;
+          rangerStationOwned = false;
+        }
+        owner.addBalance(tentPrice); //owner gains money for selling the tent / ranger station
+      }
+      tentsSold = true;
+    }
+    return tentsSold;
+  }
+  
+  /**
+   * Returns the price to buy a tent for this property
+   * @return tentPrice the price to buy a tent for this property
+   */
+  public int getTentPrice() {
+    return tentPrice;
+  }
+  
+  /**
+   * Returns if the property has a ranger station on it
+   * @return rangerStationOwned if the property has a ranger station on it
+   */
+  public boolean getRangerStationOwned() {
+    return rangerStationOwned;
+  }
+  
+  /**
+   * Sets whether the property has a ranger station on it
+   * @param owned if the property has a ranger station on it
+   */
+  public void setRangerStationOwned(boolean owned) {
+    this.rangerStationOwned = owned;
+  }
+  
+  /**
+   * Returns whether two properties are equals by comparing their names
+   * @param o the property to be compared to this property
+   * @return boolean if the property specified is the same as this property
+   */
+  @Override
+  public boolean equals(Object o) {
+    if (o instanceof Property) { //if the object entered is a Property
+      Property p = (Property) o;
+      if (getName().equals(p.getName())) //if the two properties have the same name they are the same
+        return true;
+      else
+        return false;
+    }
+    else
+      return false;
+  }
+  
+}
